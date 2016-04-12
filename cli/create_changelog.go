@@ -49,7 +49,7 @@ func collectChangelogConfigParams(config releaseman.Config, c *cli.Context) (rel
 func generateChangelog(config releaseman.Config) {
 	taggedCommits, err := git.VersionTaggedCommits()
 	if err != nil {
-		log.Fatalf("Failed to get tagged commits, error: %#v", err)
+		log.Fatalf("Failed to get tagged commits, error: %s", err)
 	}
 
 	var startCommitPtr *git.CommitModel
@@ -63,7 +63,7 @@ func generateChangelog(config releaseman.Config) {
 
 	if config.Changelog.Path != "" {
 		if exist, err := pathutil.IsPathExists(config.Changelog.Path); err != nil {
-			log.Fatalf("Failed to check if path exist, error: %#v", err)
+			log.Fatalf("Failed to check if path exist, error: %s", err)
 		} else if exist {
 			if len(taggedCommits) > 0 {
 				lastTaggedCommit := taggedCommits[len(taggedCommits)-1]
@@ -83,10 +83,10 @@ func generateChangelog(config releaseman.Config) {
 	log.Infof("=> Generating Changelog...")
 	commits, err := git.GetCommitsFrom(startCommitPtr)
 	if err != nil {
-		log.Fatalf("Failed to get commits, error: %#v", err)
+		log.Fatalf("Failed to get commits, error: %s", err)
 	}
 	if err := releaseman.WriteChangelog(commits, relevantTags, config, appendChangelog); err != nil {
-		log.Fatalf("Failed to write Changelog, error: %#v", err)
+		log.Fatalf("Failed to write Changelog, error: %s", err)
 	}
 }
 
@@ -106,17 +106,17 @@ func createChangelog(c *cli.Context) {
 	}
 
 	if exist, err := pathutil.IsPathExists(configPath); err != nil {
-		log.Warnf("Failed to check if path exist, error: %#v", err)
+		log.Warnf("Failed to check if path exist, error: %s", err)
 	} else if exist {
 		config, err = releaseman.NewConfigFromFile(configPath)
 		if err != nil {
-			log.Fatalf("Failed to parse release config at (%s), error: %#v", configPath, err)
+			log.Fatalf("Failed to parse release config at (%s), error: %s", configPath, err)
 		}
 	}
 
 	config, err := collectChangelogConfigParams(config, c)
 	if err != nil {
-		log.Fatalf("Failed to collect config params, error: %#v", err)
+		log.Fatalf("Failed to collect config params, error: %s", err)
 	}
 
 	//
@@ -138,7 +138,7 @@ func createChangelog(c *cli.Context) {
 	if c.IsSet(SetVersionScriptKey) {
 		setVersionScript := c.String(SetVersionScriptKey)
 		if err := runSetVersionScript(setVersionScript, config.Release.Version); err != nil {
-			log.Fatalf("Failed to run set version script, error: %#v", err)
+			log.Fatalf("Failed to run set version script, error: %s", err)
 		}
 	}
 

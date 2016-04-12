@@ -55,14 +55,14 @@ func initRelease(c *cli.Context) {
 	//
 	// Fail if git is not clean
 	if exist, err := pathutil.IsPathExists(releaseman.DefaultConfigPth); err != nil {
-		log.Fatalf("Failed to check path (%s), error: %#v", releaseman.DefaultConfigPth, err)
+		log.Fatalf("Failed to check path (%s), error: %s", releaseman.DefaultConfigPth, err)
 	} else if exist {
 		if releaseman.IsCIMode {
 			log.Fatalf("Release config already exist at (%s)", releaseman.DefaultConfigPth)
 		} else {
 			ok, err := goinp.AskForBoolWithDefault(fmt.Sprintf("Release config already exist at (%s), would you like to overwrite it?", releaseman.DefaultConfigPth), true)
 			if err != nil {
-				log.Fatalf("Failed to ask for bool, error: %#v", err)
+				log.Fatalf("Failed to ask for bool, error: %s", err)
 			} else if !ok {
 				log.Fatalln("Create release config aborted")
 			}
@@ -71,7 +71,7 @@ func initRelease(c *cli.Context) {
 
 	releaseConfig, err := collectInitConfigParams(releaseman.Config{}, c)
 	if err != nil {
-		log.Fatalf("Failed to collect config params, error: %#v", err)
+		log.Fatalf("Failed to collect config params, error: %s", err)
 	}
 	releaseConfig.Changelog.ContentTemplate = releaseman.ChangelogContentTemplate
 	releaseConfig.Changelog.HeaderTemplate = releaseman.ChangelogHeaderTemplate
@@ -83,10 +83,10 @@ func initRelease(c *cli.Context) {
 
 	bytes, err := yaml.Marshal(releaseConfig)
 	if err != nil {
-		log.Fatalf("Failed to marshal config, error: %#v", err)
+		log.Fatalf("Failed to marshal config, error: %s", err)
 	}
 
 	if err := fileutil.WriteBytesToFile(releaseman.DefaultConfigPth, bytes); err != nil {
-		log.Fatalf("Failed to write config to file, error: %#v", err)
+		log.Fatalf("Failed to write config to file, error: %s", err)
 	}
 }

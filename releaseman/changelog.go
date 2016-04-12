@@ -247,13 +247,13 @@ func WriteChangelog(commits, taggedCommits []git.CommitModel, config Config, app
 		headerTemplate := template.New("changelog_header").Funcs(changelogTemplateFuncMap)
 		headerTemplate, err := headerTemplate.Parse(config.Changelog.HeaderTemplate)
 		if err != nil {
-			log.Fatalf("Failed to parse header template, error: %#v", err)
+			log.Fatalf("Failed to parse header template, error: %s", err)
 		}
 
 		var headerBytes bytes.Buffer
 		err = headerTemplate.Execute(&headerBytes, newChangelog)
 		if err != nil {
-			log.Fatalf("Failed to execute layout template, error: %#v", err)
+			log.Fatalf("Failed to execute layout template, error: %s", err)
 		}
 		headerStr = headerBytes.String()
 		headerStr += "\n\n" + separator + "\n"
@@ -264,13 +264,13 @@ func WriteChangelog(commits, taggedCommits []git.CommitModel, config Config, app
 		footerTemplate := template.New("changelog_footer").Funcs(changelogTemplateFuncMap)
 		footerTemplate, err := footerTemplate.Parse(config.Changelog.FooterTemplate)
 		if err != nil {
-			log.Fatalf("Failed to parse footer template, error: %#v", err)
+			log.Fatalf("Failed to parse footer template, error: %s", err)
 		}
 
 		var footerBytes bytes.Buffer
 		err = footerTemplate.Execute(&footerBytes, newChangelog)
 		if err != nil {
-			log.Fatalf("Failed to execute footer template, error: %#v", err)
+			log.Fatalf("Failed to execute footer template, error: %s", err)
 		}
 		footerStr = footerBytes.String()
 		footerStr = separator + "\n\n" + footerStr
@@ -290,13 +290,13 @@ func WriteChangelog(commits, taggedCommits []git.CommitModel, config Config, app
 	contentTemplate := template.New("changelog_content").Funcs(changelogTemplateFuncMap)
 	contentTemplate, err := contentTemplate.Parse(changelogContentTemplateStr)
 	if err != nil {
-		log.Fatalf("Failed to parse content template, error: %#v", err)
+		log.Fatalf("Failed to parse content template, error: %s", err)
 	}
 
 	var newContentBytes bytes.Buffer
 	err = contentTemplate.Execute(&newContentBytes, newChangelog)
 	if err != nil {
-		log.Fatalf("Failed to execute template, error: %#v", err)
+		log.Fatalf("Failed to execute template, error: %s", err)
 	}
 	newContentStr := newContentBytes.String()
 

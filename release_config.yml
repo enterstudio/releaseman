@@ -1,6 +1,6 @@
 release:
-  development_branch: develop
-  release_branch: master
+  start_from: develop
+  release_on: master
 changelog:
   path: CHANGELOG.md
   content_template: |-

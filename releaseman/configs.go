@@ -2,9 +2,11 @@ package releaseman
 
 import (
 	"fmt"
+	"path"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/bitrise-io/go-utils/fileutil"
+	"github.com/bitrise-io/go-utils/pathutil"
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,9 +30,10 @@ var (
 
 // Release ...
 type Release struct {
-	DevelopmentBranch string `yaml:"development_branch"`
-	ReleaseBranch     string `yaml:"release_branch"`
-	Version           string `yaml:"version,omitempty"`
+	StartFromBranch string   `yaml:"start_from"`
+	ReleaseOnBranch string   `yaml:"release_on"`
+	Version         string   `yaml:"version,omitempty"`
+	Changes         []string `yaml:"changes,omitempty"`
 }
 
 // Changelog ...
@@ -79,6 +82,16 @@ func NewConfigFromBytes(bytes []byte) (Config, error) {
 	return config, nil
 }
 
+// WriteConfigToFile ...
+func WriteConfigToFile(config Config, pth string) error {
+	bytes, err := yaml.Marshal(config)
+	if err != nil {
+		return err
+	}
+
+	return fileutil.WriteBytesToFile(pth, bytes)
+}
+
 // PrintMode ...
 type PrintMode uint8
 
@@ -97,10 +110,10 @@ func (config Config) Print(mode PrintMode) {
 	log.Infof("Your configuration:")
 
 	if mode == ChangelogMode || mode == ReleaseMode || mode == FullMode {
-		log.Infof(" * Development branch: %s", config.Release.DevelopmentBranch)
+		log.Infof(" * Start from branch: %s", config.Release.StartFromBranch)
 	}
 	if mode == ReleaseMode || mode == FullMode {
-		log.Infof(" * Release branch: %s", config.Release.ReleaseBranch)
+		log.Infof(" * Release on branch: %s", config.Release.ReleaseOnBranch)
 	}
 	if config.Release.Version != "" && (mode == ChangelogMode || mode == ReleaseMode || mode == FullMode) {
 		log.Infof(" * Release version: %s", config.Release.Version)
@@ -110,4 +123,20 @@ func (config Config) Print(mode PrintMode) {
 	}
 
 	fmt.Println()
+}
+
+func getReleasemanDirPath() (string, error) {
+	pth := path.Join(pathutil.UserHomeDir(), ".releaseman")
+	return pth, EnsureDirExists(pth)
+}
+
+// GetPreparedReleaseConfigPath ...
+func GetPreparedReleaseConfigPath() string {
+	return path.Join(getReleasemanDirPath(), "prepared_config.yml")
+}
+
+// EnsureDirExists ...
+func EnsureDirExists(pth string) error {
+	confDirPth := getReleasemanDirPath()
+	return pathutil.EnsureDirExist(pth)
 }

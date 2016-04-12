@@ -7,7 +7,6 @@ import (
 	"github.com/bitrise-io/go-utils/colorstring"
 	"github.com/bitrise-io/go-utils/pathutil"
 	"github.com/bitrise-io/goinp/goinp"
-	"github.com/bitrise-tools/releaseman/git"
 	"github.com/bitrise-tools/releaseman/releaseman"
 	"github.com/codegangsta/cli"
 )
@@ -16,7 +15,7 @@ import (
 // Utility
 //=======================================
 
-func collectReleaseConfigParams(config releaseman.Config, c *cli.Context) (releaseman.Config, error) {
+func collectConfigParams(config releaseman.Config, c *cli.Context) (releaseman.Config, error) {
 	var err error
 
 	//
@@ -43,52 +42,24 @@ func collectReleaseConfigParams(config releaseman.Config, c *cli.Context) (relea
 		return releaseman.Config{}, err
 	}
 
+	//
+	// Fill changelog path
+	if config, err = fillChangelogPath(config, c); err != nil {
+		return releaseman.Config{}, err
+	}
+
 	return config, nil
-}
-
-func generateRelease(config releaseman.Config) {
-	fmt.Println()
-	log.Infof("=> Adding changes to git...")
-	changes, err := git.GetChangedFiles()
-	if err != nil {
-		log.Fatalf("Failed to get changes, error: %s", err)
-	}
-	if err := git.Add(changes); err != nil {
-		log.Fatalf("Failed to git add, error: %s", err)
-	}
-	if err := git.Commit(fmt.Sprintf("v%s", config.Release.Version)); err != nil {
-		log.Fatalf("Failed to git commit, error: %s", err)
-	}
-
-	fmt.Println()
-	log.Infof("=> Merging changes into release branch...")
-	if err := git.CheckoutBranch(config.Release.ReleaseBranch); err != nil {
-		log.Fatalf("Failed to git checkout, error: %s", err)
-	}
-	mergeCommitMessage := fmt.Sprintf("Merge %s into %s, release: v%s", config.Release.DevelopmentBranch, config.Release.ReleaseBranch, config.Release.Version)
-	if err := git.Merge(config.Release.DevelopmentBranch, mergeCommitMessage); err != nil {
-		log.Fatalf("Failed to git merge, error: %s", err)
-	}
-
-	fmt.Println()
-	log.Infof("=> Tagging release branch...")
-	if err := git.Tag(config.Release.Version); err != nil {
-		log.Fatalf("Failed to git tag, error: %s", err)
-	}
-	if err := git.CheckoutBranch(config.Release.DevelopmentBranch); err != nil {
-		log.Fatalf("Failed to git checkout, error: %s", err)
-	}
 }
 
 //=======================================
 // Main
 //=======================================
 
-func createRelease(c *cli.Context) {
+func create(c *cli.Context) {
 	//
 	// Fail if git is not clean
 	if err := ensureCleanGit(); err != nil {
-		log.Fatalf("Ensure clean git failed, error: %#v", err)
+		log.Fatalf("Ensure clean git failed, error: %s", err)
 	}
 
 	//
@@ -102,24 +73,24 @@ func createRelease(c *cli.Context) {
 	}
 
 	if exist, err := pathutil.IsPathExists(configPath); err != nil {
-		log.Warnf("Failed to check if path exist, error: %#v", err)
+		log.Warnf("Failed to check if path exist, error: %s", err)
 	} else if exist {
 		config, err = releaseman.NewConfigFromFile(configPath)
 		if err != nil {
-			log.Fatalf("Failed to parse release config at (%s), error: %#v", configPath, err)
+			log.Fatalf("Failed to parse release config at (%s), error: %s", configPath, err)
 		}
 	}
 
-	config, err := collectReleaseConfigParams(config, c)
+	config, err := collectConfigParams(config, c)
 	if err != nil {
-		log.Fatalf("Failed to collect config params, error: %#v", err)
+		log.Fatalf("Failed to collect config params, error: %s", err)
 	}
 
 	printRollBackMessage()
 
 	//
 	// Validate config
-	config.Print(releaseman.ReleaseMode)
+	config.Print(releaseman.FullMode)
 
 	if !releaseman.IsCIMode {
 		ok, err := goinp.AskForBoolWithDefault("Are you ready for release?", true)
@@ -136,9 +107,13 @@ func createRelease(c *cli.Context) {
 	if c.IsSet(SetVersionScriptKey) {
 		setVersionScript := c.String(SetVersionScriptKey)
 		if err := runSetVersionScript(setVersionScript, config.Release.Version); err != nil {
-			log.Fatalf("Failed to run set version script, error: %#v", err)
+			log.Fatalf("Failed to run set version script, error: %s", err)
 		}
 	}
+
+	//
+	// Generate Changelog
+	generateChangelog(config)
 
 	//
 	// Create release git changes

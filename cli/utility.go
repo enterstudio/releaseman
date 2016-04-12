@@ -36,7 +36,7 @@ func runSetVersionScript(script, nextVersion string) error {
 	cmd.Env = envs
 	outBytes, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("Failed to run set version script, out: %s, error: %#v", string(outBytes), err)
+		return fmt.Errorf("Failed to run set version script, out: %s, error: %s", string(outBytes), err)
 	}
 	return nil
 }
@@ -178,21 +178,21 @@ func askForChangelogPath() (string, error) {
 func fillDevelopmetnBranch(config releaseman.Config, c *cli.Context) (releaseman.Config, error) {
 	var err error
 
-	if c.IsSet(DevelopmentBranchKey) {
-		config.Release.DevelopmentBranch = c.String(DevelopmentBranchKey)
+	if c.IsSet(StartFromKey) {
+		config.Release.StartFromBranch = c.String(StartFromKey)
 	}
 
-	if config.Release.DevelopmentBranch == "" {
+	if config.Release.StartFromBranch == "" {
 		if releaseman.IsCIMode {
 			return releaseman.Config{}, errors.New("Missing required input: development branch")
 		}
-		config.Release.DevelopmentBranch, err = askForDevelopmentBranch()
+		config.Release.StartFromBranch, err = askForDevelopmentBranch()
 		if err != nil {
 			return releaseman.Config{}, err
 		}
 	}
 
-	if config.Release.DevelopmentBranch == "" {
+	if config.Release.StartFromBranch == "" {
 		return releaseman.Config{}, errors.New("Missing required input: development branch")
 	}
 
@@ -202,21 +202,21 @@ func fillDevelopmetnBranch(config releaseman.Config, c *cli.Context) (releaseman
 func fillReleaseBranch(config releaseman.Config, c *cli.Context) (releaseman.Config, error) {
 	var err error
 
-	if c.IsSet(ReleaseBranchKey) {
-		config.Release.ReleaseBranch = c.String(ReleaseBranchKey)
+	if c.IsSet(ReleaseOnKey) {
+		config.Release.ReleaseOnBranch = c.String(ReleaseOnKey)
 	}
-	if config.Release.ReleaseBranch == "" {
+	if config.Release.ReleaseOnBranch == "" {
 		if releaseman.IsCIMode {
 			return releaseman.Config{}, errors.New("Missing required input: release branch")
 		}
 
-		config.Release.ReleaseBranch, err = askForReleaseBranch()
+		config.Release.ReleaseOnBranch, err = askForReleaseBranch()
 		if err != nil {
 			return releaseman.Config{}, err
 		}
 	}
 
-	if config.Release.ReleaseBranch == "" {
+	if config.Release.ReleaseOnBranch == "" {
 		return releaseman.Config{}, errors.New("Missing required input: release branch")
 	}
 
@@ -241,7 +241,7 @@ func fillVersion(config releaseman.Config, c *cli.Context) (releaseman.Config, e
 
 		outBytes, err := exec.Command(head, parts...).CombinedOutput()
 		if err != nil {
-			return releaseman.Config{}, fmt.Errorf("Failed to run bump script, out: %s, error: %#v", string(outBytes), err)
+			return releaseman.Config{}, fmt.Errorf("Failed to run bump script, out: %s, error: %s", string(outBytes), err)
 		}
 		versionStr := string(outBytes)
 		versionStr = git.Strip(versionStr)
@@ -364,24 +364,24 @@ func ensureCurrentBranch(config releaseman.Config) error {
 		return err
 	}
 
-	if config.Release.DevelopmentBranch != currentBranch {
+	if config.Release.StartFromBranch != currentBranch {
 		if releaseman.IsCIMode {
-			return fmt.Errorf("Your current branch (%s), should be the development branch (%s)!", currentBranch, config.Release.DevelopmentBranch)
+			return fmt.Errorf("Your current branch (%s), should be the development branch (%s)!", currentBranch, config.Release.StartFromBranch)
 		}
 
-		log.Warnf("Your current branch (%s), should be the development branch (%s)!", currentBranch, config.Release.DevelopmentBranch)
+		log.Warnf("Your current branch (%s), should be the development branch (%s)!", currentBranch, config.Release.StartFromBranch)
 
 		fmt.Println()
-		checkout, err := goinp.AskForBoolWithDefault(fmt.Sprintf("Would you like to checkout development branch (%s)?", config.Release.DevelopmentBranch), true)
+		checkout, err := goinp.AskForBoolWithDefault(fmt.Sprintf("Would you like to checkout development branch (%s)?", config.Release.StartFromBranch), true)
 		if err != nil {
 			return err
 		}
 
 		if !checkout {
-			return fmt.Errorf("Current branch should be the development branch (%s)!", config.Release.DevelopmentBranch)
+			return fmt.Errorf("Current branch should be the development branch (%s)!", config.Release.StartFromBranch)
 		}
 
-		if err := git.CheckoutBranch(config.Release.DevelopmentBranch); err != nil {
+		if err := git.CheckoutBranch(config.Release.StartFromBranch); err != nil {
 			return err
 		}
 	}

@@ -223,7 +223,7 @@ func VersionTaggedCommits() ([]CommitModel, error) {
 
 		commit, err := parseCommit(Strip(out))
 		if err != nil {
-			return []CommitModel{}, fmt.Errorf("Failed to parse commit: %#v", err)
+			return []CommitModel{}, fmt.Errorf("Failed to parse commit, error: %s", err)
 		}
 		commit.Tag = tag
 
@@ -291,7 +291,7 @@ func FirstCommit() (CommitModel, error) {
 	}
 	commit, err := parseCommit(Strip(out))
 	if err != nil {
-		return CommitModel{}, fmt.Errorf("Failed to parse commit: %#v", err)
+		return CommitModel{}, fmt.Errorf("Failed to parse commit, error: %s", err)
 	}
 	return commit, nil
 }
@@ -304,7 +304,7 @@ func LatestCommit() (CommitModel, error) {
 	}
 	commit, err := parseCommit(Strip(out))
 	if err != nil {
-		return CommitModel{}, fmt.Errorf("Failed to parse commit: %#v", err)
+		return CommitModel{}, fmt.Errorf("Failed to parse commit, error: %s", err)
 	}
 	return commit, nil
 }
@@ -317,7 +317,7 @@ func CommitOfTag(tag string) (CommitModel, error) {
 	}
 	commit, err := parseCommit(out)
 	if err != nil {
-		return CommitModel{}, fmt.Errorf("Failed to parse commit: %#v", err)
+		return CommitModel{}, fmt.Errorf("Failed to parse commit, error: %s", err)
 	}
 	return commit, nil
 }
